@@ -87,6 +87,7 @@ def train_nn_regression_model(
     dnn_regressor = tf.estimator.DNNRegressor(
         feature_columns=construct_feature_columns(training_examples),
         hidden_units=hidden_units
+        # optimizer=my_optimizer
     )
 
     # Create input functions
