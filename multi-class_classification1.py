@@ -184,7 +184,12 @@ def train_linear_classification_model(
         validation_errors.append(validation_log_loss)
     print("Model training finished.")
     # Remove event files to save disk space.
-    _ = map(os.remove, glob.glob(os.path.join(classifier.model_dir, 'events.out.tfevents*')))
+    print("------------------------")
+    print(os.path.join(classifier.model_dir, 'events.out.tfevents*'))
+    print("------------------------")
+    # _ = map(os.remove, glob.glob(os.path.join(classifier.model_dir, 'events.out.tfevents*')))
+    for tmpfile in glob.glob(os.path.join(classifier.model_dir, 'events.out.tfevents*')):
+        os.remove(tmpfile)
 
     # Calculate final predictions (not probabilities, as above).
     final_predictions = classifier.predict(input_fn=predict_validation_input_fn)
@@ -217,9 +222,9 @@ def train_linear_classification_model(
     return classifier
 
 classifier = train_linear_classification_model(
-             learning_rate=0.02,
-             steps=100,
-             batch_size=10,
+             learning_rate=0.03,
+             steps=1000,
+             batch_size=30,
              training_examples=training_examples,
              training_targets=training_targets,
              validation_examples=validation_examples,
