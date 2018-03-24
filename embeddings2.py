@@ -92,16 +92,16 @@ terms_feature_column = tf.feature_column.categorical_column_with_vocabulary_list
 my_optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
 my_optimizer = tf.contrib.estimator.clip_gradients_by_norm(my_optimizer, 5.0)
 
-feature_columns = [ terms_feature_column ]
-
+terms_embedding_column = tf.feature_column.embedding_column(terms_feature_column, dimension=2)
+feature_columns = [ terms_embedding_column ]
 
 # classifier = tf.estimator.LinearClassifier(
 #   feature_columns=feature_columns,
 #   optimizer=my_optimizer,
 # )
 classifier = tf.estimator.DNNClassifier(
-    feature_columns=[tf.feature_column.indicator_column(terms_feature_column)],
-    hidden_units=[20, 20],
+    feature_columns=feature_columns,
+    hidden_units=[10, 10],
     optimizer=my_optimizer
 )
 
@@ -126,5 +126,27 @@ try:
     for m in evaluation_metrics:
       print(m, evaluation_metrics[m])
     print("---")
+
+    print("variable_names:  ", classifier.get_variable_names())
+    print(classifier.get_variable_value(
+        'dnn/input_from_feature_columns/input_layer/terms_embedding/embedding_weights').shape)
 except ValueError as err:
     print(err)
+
+embedding_matrix = classifier.get_variable_value(
+    'dnn/input_from_feature_columns/input_layer/terms_embedding/embedding_weights')
+
+for term_index in range(len(informative_terms)):
+    # Create a one-hot encoding for our term. It has 0's everywhere, except for
+    #  a single 1 in the coordinate that corresponds to that term.
+    term_vector = np.zeros(len(informative_terms))
+    term_vector[term_index] = 1
+    # We'll now project that one-hot vector into the embedding space.
+    embedding_xy = np.matmul(term_vector, embedding_matrix)
+    plt.text(embedding_xy[0], embedding_xy[1], informative_terms[term_index])
+
+# Do a little set-up to make sure the plot displays nicely.
+plt.rcParams["figure.figsize"] = (12, 12)
+plt.xlim(1.2 * embedding_matrix.min(), 1.2 * embedding_matrix.max())
+plt.ylim(1.2 * embedding_matrix.min(), 1.2 * embedding_matrix.max())
+plt.show()
